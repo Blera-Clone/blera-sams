@@ -10,7 +10,7 @@ export interface IAsset {
   id: string;
   macAddr: string;
   status: AssetStatus;
-  ownerId: string | null;
+  ownerId: string;
   telemetry: ITelemetry[];
   alerts: IAlert[];
   createdAt: Date | string;
