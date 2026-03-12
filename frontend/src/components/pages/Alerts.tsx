@@ -7,15 +7,13 @@ import { getAlertTheme, getAlertIcon, formatAlertLabel } from "../../utils/Alert
 export default function Alerts() {
   const [viewMode, setViewMode] = useState<'ACTIVE' | 'RESOLVED'>('ACTIVE');
   
-  // 1. Add page state
   const [page, setPage] = useState(1);
 
-  // 2. Pass the page down to the hook
-  const { data, isLoading, isError } = useAlerts(page);
+  const { data, isLoading, isError } = useAlerts(page, viewMode);
 
-  // 3. Extract the separated data from our updated select function
   const alerts = data?.alerts || [];
   const totalPages = data?.totalPages || 1;
+  const counts = data?.counts || { active: 0, resolved: 0 };
 
   const { activeAlerts, resolvedAlerts, sortBySeverity } = useAlertFilters(alerts);
 
@@ -33,48 +31,38 @@ export default function Alerts() {
   return (
     <div className="w-full bg-(--color-card) border border-(--color-card-border) rounded-2xl shadow-xl overflow-hidden font-sans flex flex-col h-full">
 
-      {/* Table Header Section with View Toggle */}
-      <div className="p-6 border-b border-(--color-card-border) flex justify-between items-center bg-gradient-to-b from-(--color-card) to-(--color-panel)/30">
+      {/* Header Section with View Toggle */}
+      <div className="p-6 flex justify-between items-center bg-gradient-to-b from-(--color-card) to-(--color-panel)/10 border-b border-(--color-card-border)">
         <div>
           <h2 className="text-lg font-semibold text-gray-100">System Alerts</h2>
           <p className="text-sm text-gray-400 mt-1">Monitor automated hardware diagnostics across the network.</p>
         </div>
 
-        <div className="flex bg-(--color-panel) p-1 rounded-lg border border-(--color-card-border)">
+        <div className="flex gap-2">
           <button
-            onClick={() => { setViewMode('ACTIVE'); setPage(1); }} // Reset page when switching views
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'ACTIVE'
-                ? 'bg-(--color-card) text-gray-100 shadow-sm border border-(--color-card-border)'
-                : 'text-gray-500 hover:text-gray-300'
+            onClick={() => { setViewMode('ACTIVE'); setPage(1); }}
+            className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all border ${viewMode === 'ACTIVE'
+                ? 'bg-(--color-panel) border-(--color-card-border) text-gray-100 shadow-sm'
+                : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'
               }`}
           >
-            Active ({activeAlerts.length})
+            Active ({counts.active})
           </button>
           <button
-            onClick={() => { setViewMode('RESOLVED'); setPage(1); }} // Reset page when switching views
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'RESOLVED'
-                ? 'bg-(--color-card) text-gray-100 shadow-sm border border-(--color-card-border)'
-                : 'text-gray-500 hover:text-gray-300'
+            onClick={() => { setViewMode('RESOLVED'); setPage(1); }}
+            className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all border ${viewMode === 'RESOLVED'
+                ? 'bg-(--color-panel) border-(--color-card-border) text-gray-100 shadow-sm'
+                : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'
               }`}
           >
-            Resolved ({resolvedAlerts.length})
+            Resolved ({counts.resolved})
           </button>
         </div>
       </div>
 
-      {/* Table Content */}
+      {/* Table Content - Headers Removed */}
       <div className="overflow-x-auto flex-grow">
         <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-(--color-panel) border-b border-(--color-card-border)">
-              <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Asset ID</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Severity</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Warning Type</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Message</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-              <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider text-right">Time</th>
-            </tr>
-          </thead>
           <tbody className="divide-y divide-(--color-card-border)">
             {isLoading ? (
               <tr>
@@ -99,36 +87,43 @@ export default function Alerts() {
                 const CategoryIcon = getAlertIcon(alert.category);
 
                 return (
-                  <tr key={alert.id} className="hover:bg-(--color-panel)/50 transition-colors">
-                    <td className="py-4 px-6 text-sm font-medium text-gray-200">
-                      <span className="font-mono text-xs text-gray-400">{alert.assetId.substring(0, 8)}...</span>
+                  <tr key={alert.id} className="hover:bg-(--color-panel)/30 transition-colors">
+                    
+                    <td className="py-5 px-6 text-sm font-medium text-gray-200 w-[15%]">
+                      <span className="text-xs text-gray-400">{alert.assetId.substring(0, 8)}...</span>
                     </td>
-                    <td className="py-4 px-6 text-sm">
+                    
+                    <td className="py-5 px-6 text-sm w-[15%]">
                       <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border ${getAlertTheme(alert.severity)}`}>
                         {alert.severity}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-sm text-gray-300">
+                    
+                    <td className="py-5 px-6 text-sm text-gray-200 w-[20%]">
                       <div className="flex items-center gap-2 font-medium">
-                        <CategoryIcon size={16} className="opacity-70" />
+                        <CategoryIcon size={16} className="opacity-70 text-gray-400" />
                         {formatAlertLabel(alert.type)}
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm text-gray-300">
+                    
+                    <td className="py-5 px-6 text-sm text-gray-300 w-[25%]">
                       {alert.message}
                     </td>
-                    <td className="py-4 px-6 text-sm">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${!alert.isResolved
-                          ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    
+                    <td className="py-5 px-6 text-sm w-[15%]">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium border bg-transparent ${!alert.isResolved
+                          ? 'text-red-400 border-red-500/50'
+                          : 'text-emerald-400 border-emerald-500/50'
                         }`}>
                         {!alert.isResolved ? <Clock size={12} /> : <CheckCircle size={12} />}
                         {!alert.isResolved ? 'Active' : 'Resolved'}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-sm text-gray-400 text-right whitespace-nowrap">
+                    
+                    <td className="py-5 px-6 text-sm text-gray-400 text-right whitespace-nowrap w-[10%]">
                       {formatTime(alert.createdAt)}
                     </td>
+                    
                   </tr>
                 )
               })
@@ -138,21 +133,21 @@ export default function Alerts() {
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-4 border-t border-(--color-card-border) flex items-center justify-between bg-(--color-panel)/50">
+      <div className="p-4 border-t border-(--color-card-border) flex items-center justify-between bg-transparent">
         <button
           onClick={() => setPage((old) => Math.max(old - 1, 1))}
           disabled={page === 1}
-          className="px-4 py-2 text-sm font-medium text-gray-300 bg-(--color-card) border border-(--color-card-border) rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-(--color-panel) transition-colors"
+          className="px-4 py-1.5 text-xs font-medium text-gray-300 bg-(--color-panel) border border-(--color-card-border) rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-(--color-card) transition-colors"
         >
           Previous
         </button>
-        <span className="text-sm font-medium text-gray-400">
+        <span className="text-xs font-medium text-gray-400">
           Page {page} of {totalPages}
         </span>
         <button
           onClick={() => setPage((old) => (!totalPages || old === totalPages ? old : old + 1))}
           disabled={page === totalPages}
-          className="px-4 py-2 text-sm font-medium text-gray-300 bg-(--color-card) border border-(--color-card-border) rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-(--color-panel) transition-colors"
+          className="px-4 py-1.5 text-xs font-medium text-gray-300 bg-(--color-panel) border border-(--color-card-border) rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-(--color-card) transition-colors"
         >
           Next
         </button>

@@ -2,14 +2,14 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { SERVER_URL } from "../../config/config";
 import { useAuthStore } from "../../store/useAuthStore";
 
-export const useAlerts = (page: number, limit: number = 10) => {
+export const useAlerts = (page: number, viewMode: 'ACTIVE' | 'RESOLVED', limit: number = 10) => {
   const token = useAuthStore((state) => state.token);
 
   return useQuery({
-    queryKey: ["alerts"],
+    queryKey: ["alerts", viewMode, page, limit],
     enabled: !!token,
     queryFn: async () => {
-      const response = await fetch(`${SERVER_URL}/api/alert?page=${page}&limit=${limit}`, {
+      const response = await fetch(`${SERVER_URL}/api/alert?page=${page}&limit=${limit}&status=${viewMode}`, {
         headers: {
           authorization: `Bearer ${token}`,
         },
@@ -22,7 +22,6 @@ export const useAlerts = (page: number, limit: number = 10) => {
 
       return response.json();
     },
-    // This replaces onSuccess for data transformation
     select: (result) => {
        const formattedAlerts = result.data.map((rawAlert: any) => {
         let derivedCategory: "THERMAL" | "PERFORMANCE" | "INFO" = "INFO";
@@ -47,6 +46,7 @@ export const useAlerts = (page: number, limit: number = 10) => {
       return {
         alerts: formattedAlerts,
         totalPages: result.pagination?.totalPages || 1,
+        counts: result.counts || { active: 0, resolved: 0 }
       };
     },
     placeholderData: keepPreviousData,
