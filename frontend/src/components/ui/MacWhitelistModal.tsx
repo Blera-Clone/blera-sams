@@ -92,7 +92,7 @@ const MacWhitelistModal = ({ onClose }: MacWhitelistModalProps) => {
   };
 
   const validateAndSave = useCallback(() => {
-    const allErrors: Record<number, RowErrors> = {};isPending
+    const allErrors: Record<number, RowErrors> = {};
     let hasErrors = false;
 
     assets.forEach((_, i) => {
@@ -142,7 +142,7 @@ const MacWhitelistModal = ({ onClose }: MacWhitelistModalProps) => {
               >
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-                    Device {i + 1}
+                    Asset {i + 1}
                   </span>
                   {assets.length > 1 && (
                     <button
@@ -197,7 +197,7 @@ const MacWhitelistModal = ({ onClose }: MacWhitelistModalProps) => {
             onClick={addRow}
             className="mt-4 w-full py-2 border border-dashed border-gray-700 rounded-lg text-xs text-gray-500 hover:text-gray-300 flex items-center justify-center gap-2 transition-colors"
           >
-            <Plus size={14} /> Add Another Device
+            <Plus size={14} /> Add Another Asset
           </button>
 
           <button
@@ -206,7 +206,7 @@ const MacWhitelistModal = ({ onClose }: MacWhitelistModalProps) => {
             className="mt-6 w-full py-2.5 bg-linear-to-r from-(--color-primary) to-(--color-sec) text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98]"
           >
             {isPending && <Loader2 className="animate-spin h-4 w-4" />}
-            {isPending ? "Registering..." : "Register Devices"}
+            {isPending ? "Registering..." : "Register Assets"}
           </button>
         </div>
       </div>

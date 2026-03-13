@@ -1,26 +1,31 @@
 import { Server, Activity, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useDashboardStats } from "../../../hooks/queries/useDashboard";
 import StatSkeleton from "./StatSkeleton";
-import { useEffect } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner"; 
 import { useDashboardStore } from "../../../store/useDashBoardStore";
 
+
 export default function DashboardStats() {
-  const { data, isLoading, isError, error } = useDashboardStats();
-  const updateStats = useDashboardStore(state => state.updateStats)
-  useEffect(() => {
-    if (isError) {
-      toast.error("Failed to load dashboard stats", {
-        description:error.message
-      });
-    }
-  }, [isError]);
+  const { data, isPending } = useDashboardStats();
+  const { updateStats } = useDashboardStore();
+  const hasShownInitialToast = useRef(false);
 
   useEffect(() => {
-    if (data?.activeAlerts) {
-      updateStats(data.actitveAlerts);
+    if (data) {
+      // Always sync the store with fresh data
+      updateStats(data.activeAlerts);
+
+      if (!hasShownInitialToast.current) {
+        toast.success("Dashboard stats updated", {
+          id: "dashboard-sync",
+          duration: 2000,
+        });
+
+        hasShownInitialToast.current = true;
+      }
     }
-  },[updateStats,data])
+  }, [data, updateStats]);
 
   const stats = [
     {
@@ -66,7 +71,7 @@ export default function DashboardStats() {
               {stat.icon}
             </div>
 
-            {!isLoading && stat.alert && (
+            {!isPending && stat.alert && (
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -75,7 +80,7 @@ export default function DashboardStats() {
           </div>
 
           <div>
-            {isLoading ? <StatSkeleton /> : (
+            {isPending ? <StatSkeleton /> : (
               <p className="text-2xl font-bold text-gray-100">{stat.value}</p>
             )}
 

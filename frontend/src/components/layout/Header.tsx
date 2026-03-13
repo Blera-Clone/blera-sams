@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { User, Bell, Search, LogOut, PlusCircle } from "lucide-react";
+import { User, Bell, LogOut, PlusCircle } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useDashboardStore } from "../../store/useDashBoardStore";
 import MacWhitelistModal from "../ui/MacWhitelistModal";
@@ -42,23 +42,7 @@ export default function Header() {
         </p>
       </div>
 
-      {/* 2. Middle Section: Search */}
-      <div className="hidden md:flex flex-1 max-w-md mx-8">
-        <div className="relative w-full group">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-(--color-primary) transition-colors"
-          />
-          {/* TODO: Search by what */}
-          <input
-            type="text"
-            placeholder="Search assets"
-            className="w-full bg-(--color-panel) border border-(--color-card-border) rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-(--color-primary) transition-all"
-          />
-        </div>
-      </div>
-
-      {/* 3. Right Section */}
+      {/* 2. Right Section */}
       <div className="flex items-center gap-3">
         {/* Notifications */}
         <div className="relative group/tooltip flex items-center justify-center">
@@ -85,7 +69,7 @@ export default function Header() {
 
           {/* Tooltip text */}
           <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-            Register device through MAC address
+            Register asset through MAC address
           </span>
         </div>
 
