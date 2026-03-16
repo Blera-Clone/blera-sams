@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { addAsset, deleteAsset, getAssets, updateAsset } from "./controllers/assetController.js";
 import verifyUser from "../users/controller/userAuthMiddleware.js";
-import { getDashboardSummary } from "./controllers/analyticsController.js";
+import { getDashboardSummary, getWarRoomAlerts } from "./controllers/analyticsController.js";
 
 const router = Router();
 
@@ -10,6 +10,7 @@ router
     .get('', verifyUser, getAssets)
     .get('/analysis', verifyUser, getDashboardSummary)
     .delete('/delete', verifyUser, deleteAsset)
-    .put('/', verifyUser, updateAsset);
+    .put('/', verifyUser, updateAsset)
+    .get('/report', verifyUser, getWarRoomAlerts);
 
 export default router;
