@@ -3,7 +3,6 @@ import { Response } from "express";
 import { AuthRequest } from "../../users/controller/userAuthMiddleware.js";
 import { prisma } from "../../lib/prisma.js";
 
-
 const addAsset = async (req: AuthRequest, res: Response) => {
   try {
     const { devices } = req.body;
@@ -36,6 +35,45 @@ const addAsset = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("Error registering assets:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getAssetById = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== "string") {
+      return res.status(400).json({ message: "Asset ID is required" });
+    }
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const asset = await prisma.asset.findFirst({
+      where: {
+        id,
+        ownerId: req.user.id,
+      },
+      include: {
+        telemetry: {
+          orderBy: { timestamp: "desc" },
+          take: 1,
+        },
+        alerts: true,
+      },
+    });
+
+    if (!asset) {
+      return res.status(404).json({ message: "Asset not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Asset fetched successfully", data: asset });
+  } catch (error) {
+    console.error("Error fetching asset: ", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -87,9 +125,13 @@ const deleteAsset = async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.$transaction([
-      prisma.alert.deleteMany({ where: { asset: { macAddr: macAddress as string } } }),
-      prisma.telemetry.deleteMany({ where: { asset: { macAddr: macAddress as string } } }),
-      prisma.asset.delete({ where: { macAddr: macAddress as string} })
+      prisma.alert.deleteMany({
+        where: { asset: { macAddr: macAddress as string } },
+      }),
+      prisma.telemetry.deleteMany({
+        where: { asset: { macAddr: macAddress as string } },
+      }),
+      prisma.asset.delete({ where: { macAddr: macAddress as string } }),
     ]);
 
     return res.status(201).json({ message: "Successfully deleted asset" });
@@ -110,32 +152,35 @@ const updateAsset = async (req: AuthRequest, res: Response) => {
     const { name } = req.body;
 
     if (!id || !name) {
-      return res.status(400).json({ message: "Asset ID and new name are required" });
+      return res
+        .status(400)
+        .json({ message: "Asset ID and new name are required" });
     }
 
     // Verify the asset belongs to the user before updating
     const existingAsset = await prisma.asset.findUnique({
-      where: { id: id as string}
+      where: { id: id as string },
     });
 
     if (!existingAsset || existingAsset.ownerId !== req.user.id) {
-      return res.status(404).json({ message: "Asset not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Asset not found or unauthorized" });
     }
 
     const updatedAsset = await prisma.asset.update({
       where: { id: id as string },
-      data: { name: name }
+      data: { name: name },
     });
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: "Successfully updated asset",
-      asset: updatedAsset
+      asset: updatedAsset,
     });
-
   } catch (error) {
     console.log("Error while updating the asset: ", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-export { addAsset, getAssets, deleteAsset, updateAsset };
+export { addAsset, getAssets, deleteAsset, updateAsset, getAssetById };
