@@ -1,11 +1,6 @@
 import { create } from "zustand";
 
-export type FilterMode =
-  | "ALL"
-  | "CONNECTIVITY"
-  | "THERMAL"
-  | "BATTERY"
-  | "PERFORMANCE";
+export type FilterMode = "ALL" | "THERMAL" | "BATTERY" | "CPU";
 
 interface DashboardState {
   activeAlerts: number;
@@ -21,7 +16,7 @@ interface DashboardState {
 export const useDashboardStore = create<DashboardState>((set) => ({
   activeAlerts: 0,
   searchQuery: "",
-  filterMode: "ALL", 
+  filterMode: "ALL",
 
   updateStats: (alerts) => set({ activeAlerts: alerts }),
 

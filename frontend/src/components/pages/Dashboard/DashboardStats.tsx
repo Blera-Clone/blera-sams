@@ -1,29 +1,17 @@
 import { Server, Activity, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useDashboardStats } from "../../../hooks/queries/useDashboard";
 import StatSkeleton from "./StatSkeleton";
-import { useEffect, useRef } from "react";
-import { toast } from "sonner"; 
+import { useEffect } from "react";
 import { useDashboardStore } from "../../../store/useDashBoardStore";
-
 
 export default function DashboardStats() {
   const { data, isPending } = useDashboardStats();
   const { updateStats } = useDashboardStore();
-  const hasShownInitialToast = useRef(false);
 
   useEffect(() => {
     if (data) {
       // Always sync the store with fresh data
       updateStats(data.activeAlerts);
-
-      if (!hasShownInitialToast.current) {
-        toast.success("Dashboard stats updated", {
-          id: "dashboard-sync",
-          duration: 2000,
-        });
-
-        hasShownInitialToast.current = true;
-      }
     }
   }, [data, updateStats]);
 
@@ -80,7 +68,9 @@ export default function DashboardStats() {
           </div>
 
           <div>
-            {isPending ? <StatSkeleton /> : (
+            {isPending ? (
+              <StatSkeleton />
+            ) : (
               <p className="text-2xl font-bold text-gray-100">{stat.value}</p>
             )}
 

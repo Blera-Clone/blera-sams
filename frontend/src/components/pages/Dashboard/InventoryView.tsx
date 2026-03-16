@@ -1,22 +1,51 @@
-import { Search, AlertCircle, WifiOff, Thermometer, Battery, Cpu, LayoutGrid, Zap, CheckCircle2, ExternalLink } from "lucide-react";
+import {
+  Search,
+  AlertCircle,
+  Thermometer,
+  Battery,
+  Cpu,
+  LayoutGrid,
+  Zap,
+  CheckCircle2,
+  ExternalLink,
+  Activity,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useDashboardStore, type FilterMode } from "../../../store/useDashBoardStore";
+import {
+  useDashboardStore,
+  type FilterMode,
+} from "../../../store/useDashBoardStore";
 import { useAssetStore } from "../../../store/useAssetStore";
 import MetricItem from "../../ui/MetricItem";
+import type { Asset } from "../../../types/Asset";
+import type { Alert } from "../../../types/Alerts";
 
 export default function InventoryView() {
   const navigate = useNavigate();
-  const { searchQuery, setSearchQuery, filterMode, setFilterMode } = useDashboardStore();
+  const { searchQuery, setSearchQuery, filterMode, setFilterMode } =
+    useDashboardStore();
 
   const allAssets = useAssetStore((state) => state.assets);
   const resolveAlert = useAssetStore((state) => state.resolveAlert);
 
-  const alertingAssets = allAssets.filter(asset => {
-    const unresolved = asset.activeAlerts?.filter(a => !a.isResolved) || [];
+  const alertingAssets = allAssets.filter((asset: Asset) => {
+    const unresolved = asset.alerts?.filter((a: Alert) => !a.isResolved) || [];
     if (unresolved.length === 0) return false;
 
-    const matchesSearch = asset.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterMode === "ALL" || unresolved.some(a => a.category === filterMode);
+    const matchesSearch = asset.id
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    
+    // Map FilterMode to MetricType
+    const modeToMetric: Record<string, string> = {
+        "THERMAL": "CPU_TEMP",
+        "BATTERY": "BATTERY",
+        "CPU": "CPU_USAGE",
+        "MEM": "MEM_USAGE"
+    };
+
+    const matchesCategory =
+      filterMode === "ALL" || unresolved.some((a: Alert) => a.metric === modeToMetric[filterMode]);
 
     return matchesSearch && matchesCategory;
   });
@@ -26,7 +55,10 @@ export default function InventoryView() {
       {/* --- SEARCH & CATEGORY TOGGLES --- */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:max-w-md group">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors"
+          />
           <input
             type="text"
             value={searchQuery}
@@ -38,17 +70,27 @@ export default function InventoryView() {
 
         <div className="flex bg-[#111827] p-1 rounded-xl border border-gray-800 overflow-x-auto no-scrollbar shadow-inner">
           {[
-            { id: 'ALL', label: 'All', icon: <AlertCircle size={14} /> },
-            { id: 'CONNECTIVITY', label: 'Network', icon: <WifiOff size={14} /> },
-            { id: 'THERMAL', label: 'Thermal', icon: <Thermometer size={14} /> },
-            { id: 'BATTERY', label: 'Battery', icon: <Battery size={14} /> },
-            { id: 'PERFORMANCE', label: 'Performance', icon: <Cpu size={14} /> },
+            { id: "ALL", label: "All", icon: <AlertCircle size={14} /> },
+            {
+              id: "THERMAL",
+              label: "Thermal",
+              icon: <Thermometer size={14} />,
+            },
+            { id: "BATTERY", label: "Battery", icon: <Battery size={14} /> },
+            {
+              id: "CPU",
+              label: "Performance",
+              icon: <Cpu size={14} />,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterMode(tab.id as FilterMode)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap cursor-pointer ${filterMode === tab.id ? 'bg-gray-700 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all whitespace-nowrap cursor-pointer ${
+                filterMode === tab.id
+                  ? "bg-gray-700 text-white shadow-md"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
             >
               {tab.icon} {tab.label}
             </button>
@@ -70,23 +112,55 @@ export default function InventoryView() {
             {alertingAssets.length === 0 ? (
               <NoAlertsState navigate={navigate} />
             ) : (
-              alertingAssets.map((asset) => {
-                const unresolved = asset.activeAlerts?.filter(a => !a.isResolved) || [];
-                const tel = asset.latestTelemetry;
+              alertingAssets.map((asset: Asset) => {
+                const unresolved =
+                  asset.alerts?.filter((a: Alert) => !a.isResolved) || [];
+                const tel = asset.telemetry?.[0];
 
                 return (
-                  <tr key={asset.id} className="hover:bg-blue-500/[0.02] transition-all group">
+                  <tr
+                    key={asset.id}
+                    className="hover:bg-blue-500/[0.02] transition-all group"
+                  >
                     <td className="py-5 px-6">
-                        <span className="text-[11px] font-mono font-bold text-gray-400 group-hover:text-blue-400 transition-colors">
-                          {asset.id}
-                        </span>                       
+                      <span className="text-[11px] font-mono font-bold text-gray-400 group-hover:text-blue-400 transition-colors">
+                        {asset.id}
+                      </span>
                     </td>
 
                     <td className="py-5 px-6">
                       <div className="flex items-center justify-center gap-6">
-                        <MetricItem icon={<Cpu size={14} />} value={tel?.cpuTotalUsagePercent} label="CPU" isAlert={unresolved.some(a => a.category === 'PERFORMANCE')} />
-                        <MetricItem icon={<Thermometer size={14} />} value={tel?.cpuTemperature} label="Temp" unit="°" isAlert={unresolved.some(a => a.category === 'THERMAL')} />
-                        <MetricItem icon={<Battery size={14} />} value={tel?.batteryPercent} label="Batt" isAlert={unresolved.some(a => a.category === 'BATTERY')} />
+                        <MetricItem
+                          icon={<Cpu size={14} />}
+                          value={tel?.cpuTotalUsagePercent}
+                          label="CPU"
+                          isAlert={unresolved.some((a: Alert) => a.metric === "CPU_USAGE")}
+                        />
+                        <MetricItem
+                          icon={<Thermometer size={14} />}
+                          value={tel?.cpuTemperature ?? undefined}
+                          label="Temp"
+                          unit="°"
+                          isAlert={unresolved.some(
+                            (a: Alert) => a.metric === "CPU_TEMP",
+                          )}
+                        />
+                        <MetricItem
+                          icon={<Battery size={14} />}
+                          value={tel?.batteryPercent ?? undefined}
+                          label="Batt"
+                          isAlert={unresolved.some(
+                            (a: Alert) => a.metric === "BATTERY",
+                          )}
+                        />
+                        <MetricItem
+                          icon={<Activity size={14} />}
+                          value={tel?.memoryUsagePercent}
+                          label="RAM"
+                          isAlert={unresolved.some(
+                            (a: Alert) => a.metric === "MEM_USAGE",
+                          )}
+                        />
                       </div>
                     </td>
 
@@ -98,9 +172,9 @@ export default function InventoryView() {
                         >
                           <CheckCircle2 size={12} /> Resolve
                         </button>
-                        <div className="w-[1px] h-4 bg-gray-800 mx-1" />
+                        <div className="w-px h-4 bg-gray-800 mx-1" />
                         <button
-                          onClick={() => navigate(`/inventory?id=${asset.id}`)}
+                          onClick={() => navigate(`/dashboard/${asset.id}`)}
                           className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold rounded-lg border border-blue-500/20 transition-all cursor-pointer"
                         >
                           Details <ExternalLink size={12} />
@@ -118,7 +192,8 @@ export default function InventoryView() {
   );
 }
 
-function NoAlertsState({ navigate }: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function NoAlertsState({ navigate }: { navigate: (path: string) => void }) {
   return (
     <tr>
       <td colSpan={3} className="py-24 text-center">
@@ -127,10 +202,17 @@ function NoAlertsState({ navigate }: any) {
             <Zap size={40} className="text-emerald-500 opacity-20" />
           </div>
           <div className="space-y-1 text-center">
-            <p className="text-sm font-semibold text-gray-300 tracking-tight">Fleet Clear</p>
-            <p className="text-[11px] text-gray-500 italic">No unresolved hardware exceptions currently active.</p>
+            <p className="text-sm font-semibold text-gray-300 tracking-tight">
+              Fleet Clear
+            </p>
+            <p className="text-[11px] text-gray-500 italic">
+              No unresolved hardware exceptions currently active.
+            </p>
           </div>
-          <button onClick={() => navigate('/inventory')} className="mt-2 flex items-center gap-2 px-4 py-2 bg-gray-800 text-[10px] font-bold rounded-lg border border-gray-700 hover:bg-gray-700 text-gray-300 transition-all cursor-pointer">
+          <button
+            onClick={() => navigate("/inventory")}
+            className="mt-2 flex items-center gap-2 px-4 py-2 bg-gray-800 text-[10px] font-bold rounded-lg border border-gray-700 hover:bg-gray-700 text-gray-300 transition-all cursor-pointer"
+          >
             <LayoutGrid size={12} /> View Full Registry
           </button>
         </div>

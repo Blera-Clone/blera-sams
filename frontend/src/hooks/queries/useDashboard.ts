@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { SERVER_URL } from "../../config/config";
 import { useAuthStore } from "../../store/useAuthStore";
+import type { Stats } from "../../types/Telemetry";
 
 export const useDashboardStats = () => {
   const token = useAuthStore((state) => state.token);
 
-  return useQuery({
+  return useQuery<Stats>({
     queryKey: ["dashboardStats"],
     enabled: !!token,
     queryFn: async () => {

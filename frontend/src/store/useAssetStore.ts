@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type Asset } from "../types/Telemetry";
+import { type Asset } from "../types/Asset";
 import type { Alert } from "../types/Alerts";
 
 interface AssetStore {
@@ -17,14 +17,14 @@ export const useAssetStore = create<AssetStore>((set) => ({
 
   upsertAlertingAssets: (incoming) =>
     set((state) => {
-      const assetMap = new Map(state.assets.map((a) => [a.id, a]));
+      const assetMap = new Map(state.assets.map((a: Asset) => [a.id, a]));
 
-      incoming.forEach((asset) => {
+      incoming.forEach((asset: Asset) => {
         const existing = assetMap.get(asset.id);
         // Ensure we don't lose existing alerts when merging new data
         const mergedAlerts = [
-          ...(existing?.activeAlerts || []),
-          ...(asset.activeAlerts || []),
+          ...(existing?.alerts || []),
+          ...(asset.alerts || []),
         ];
         // De-duplicate alerts by ID
         const uniqueAlerts = Array.from(
@@ -34,7 +34,7 @@ export const useAssetStore = create<AssetStore>((set) => ({
         assetMap.set(asset.id, {
           ...existing,
           ...asset,
-          activeAlerts: uniqueAlerts,
+          alerts: uniqueAlerts,
         });
       });
 
@@ -43,31 +43,31 @@ export const useAssetStore = create<AssetStore>((set) => ({
 
   addLiveAlert: (newAlert: Alert) =>
     set((state) => ({
-      assets: state.assets.map((asset) => {
+      assets: state.assets.map((asset: Asset) => {
         if (asset.id === newAlert.assetId) {
           // Check if alert already exists to prevent duplicates
-          const exists = asset.activeAlerts?.some((a) => a.id === newAlert.id);
+          const exists = asset.alerts?.some((a: Alert) => a.id === newAlert.id);
           if (exists) return asset;
 
           return {
             ...asset,
-            activeAlerts: [...(asset.activeAlerts || []), newAlert],
+            alerts: [...(asset.alerts || []), newAlert],
           };
         }
         return asset;
       }),
     })),
 
-  resolveAlert: (alertId) =>
+  resolveAlert: (alertId: string) =>
     set((state) => ({
       assets: state.assets
-        .map((asset) => ({
+        .map((asset: Asset) => ({
           ...asset,
-          activeAlerts: asset.activeAlerts?.filter((a) => a.id !== alertId),
+          alerts: asset.alerts?.filter((a: Alert) => a.id !== alertId),
         }))
         .filter(
-          (asset) =>
-            (asset.activeAlerts?.length ?? 0) > 0 || asset.status === "OFFLINE",
+          (asset: Asset) =>
+            (asset.alerts?.length ?? 0) > 0 || asset.status === "OFFLINE",
         ),
     })),
 }));

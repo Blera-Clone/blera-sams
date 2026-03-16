@@ -9,7 +9,8 @@ const getDashboardSummary = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const assetFilter = { ownerId: req.user.id };
+    const userId = req.user.id;
+    const assetFilter = { ownerId: userId };
 
     const [totalAssets, onlineAssets, offlineAssets, activeAlerts] =
       await Promise.all([

@@ -15,7 +15,7 @@ export default function Header() {
   const activeAlerts = useDashboardStore((state) => state.activeAlerts);
 
   const getPageTitle = (path: string) => {
-    if (path.includes("/dashboard/")) return "Asset Details";
+    if (path.includes("/dashboard/")) return ``;
     switch (path) {
       case "/dashboard":
         return "System Overview";

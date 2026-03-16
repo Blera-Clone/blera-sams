@@ -24,11 +24,11 @@ export const useAlerts = (page: number, viewMode: 'ACTIVE' | 'RESOLVED',search: 
     },
     select: (result) => {
        const formattedAlerts = result.data.map((rawAlert: any) => {
-        let derivedCategory: "THERMAL" | "PERFORMANCE" | "INFO" = "INFO";
+        let derivedCategory: "THERMAL" | "CPU" | "INFO" = "INFO";
 
         if (rawAlert.metric.includes("TEMP")) derivedCategory = "THERMAL";
         else if (rawAlert.metric.includes("USAGE"))
-          derivedCategory = "PERFORMANCE";
+          derivedCategory = "CPU";
 
         return {
           id: rawAlert.id,

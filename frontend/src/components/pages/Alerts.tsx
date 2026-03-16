@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, Clock, Search } from "lucide-react"; 
 import { useAlerts } from "../../hooks/queries/useAlert"; 
 import { getAlertTheme, getAlertIcon, formatAlertLabel } from "../../utils/AlertHelpers"; 
+import type { Alert } from "../../types/Alerts";
 
 export default function Alerts() {
   const [viewMode, setViewMode] = useState<'ACTIVE' | 'RESOLVED'>('ACTIVE');
@@ -137,8 +138,8 @@ export default function Alerts() {
                 </td>
               </tr>
             ) : (
-              displayedAlerts.map((alert: any) => {
-                const CategoryIcon = getAlertIcon(alert.category);
+              displayedAlerts.map((alert: Alert) => {
+                const CategoryIcon = getAlertIcon(alert.metric);
 
                 return (
                   <tr key={alert.id} className="hover:bg-(--color-panel)/30 transition-colors">
@@ -148,15 +149,15 @@ export default function Alerts() {
                     </td>
                     
                     <td className="py-5 px-6 text-sm w-[15%]">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border ${getAlertTheme(alert.severity)}`}>
-                        {alert.severity}
+                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider border ${getAlertTheme(alert.type)}`}>
+                        {alert.type}
                       </span>
                     </td>
                     
                     <td className="py-5 px-6 text-sm text-gray-200 w-[20%]">
                       <div className="flex items-center gap-2 font-medium">
                         <CategoryIcon size={16} className="opacity-70 text-gray-400" />
-                        {formatAlertLabel(alert.type)}
+                        {formatAlertLabel(alert.metric)}
                       </div>
                     </td>
                     
